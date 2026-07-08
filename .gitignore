@@ -1,0 +1,20 @@
+# ==========================
+# Website Mirror
+# ==========================
+
+# Downloaded websites
+downloads/
+
+# Download logs
+logs/
+
+# Generated ZIP archives
+*.zip
+
+# Temporary files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
