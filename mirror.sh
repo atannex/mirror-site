@@ -1,68 +1,137 @@
 #!/usr/bin/env bash
 
-
-# =====================================================
-# Website Mirror Application
-# =====================================================
-
-
 set -e
 
 
+# =====================================================
+# ATANNEX Website Mirror Application
+# Enterprise Website Migration & Backup Engine
+# =====================================================
+
+
+clear
+
+
+echo "
+ █████╗ ████████╗ █████╗ ███╗   ██╗███╗   ██╗███████╗██╗  ██╗
+██╔══██╗╚══██╔══╝██╔══██╗████╗  ██║████╗  ██║██╔════╝╚██╗██╔╝
+███████║   ██║   ███████║██╔██╗ ██║██╔██╗ ██║█████╗   ╚███╔╝ 
+██╔══██║   ██║   ██╔══██║██║╚██╗██║██║╚██╗██║██╔══╝   ██╔██╗ 
+██║  ██║   ██║   ██║  ██║██║ ╚████║██║ ╚████║███████╗██╔╝ ██╗
+╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+
+
+        🚀 ATANNEX
+        Website Mirror Application v1.0
+
+        Enterprise Website Migration
+        Backup & Archiving Engine
+"
+
+
+echo
+
+
+# =====================================================
+# Application Paths
+# =====================================================
+
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
+# =====================================================
+# Load Configuration
+# =====================================================
+
+if [[ ! -f "$BASE_DIR/config.sh" ]]; then
+    echo "ERROR: Missing config.sh"
+    exit 1
+fi
 
 
 source "$BASE_DIR/config.sh"
 
 
-for FILE in \
-colors.sh \
-utils.sh \
-validator.sh \
-logger.sh \
-downloader.sh \
-zipper.sh \
-summary.sh \
-menu.sh
 
+# =====================================================
+# Load Application Modules
+# =====================================================
+
+LIBRARIES=(
+    colors.sh
+    utils.sh
+    validator.sh
+    logger.sh
+    downloader.sh
+    zipper.sh
+    summary.sh
+    menu.sh
+)
+
+
+for FILE in "${LIBRARIES[@]}"
 do
 
-    source "$BASE_DIR/lib/$FILE"
+    LIB_PATH="$BASE_DIR/lib/$FILE"
+
+    if [[ ! -f "$LIB_PATH" ]]; then
+        echo "ERROR: Missing library: $FILE"
+        exit 1
+    fi
+
+    source "$LIB_PATH"
 
 done
 
 
 
-if ! require_command wget; then
+# =====================================================
+# Dependency Validation
+# =====================================================
 
-    error "wget is missing."
-    echo "Install using:"
-    echo "sudo apt install wget"
-
-    exit 1
-
-fi
-
-
-if ! require_command curl; then
-
-    error "curl is missing."
-    echo "Install using:"
-    echo "sudo apt install curl"
-
-    exit 1
-
-fi
+DEPENDENCIES=(
+    wget
+    curl
+)
 
 
+for CMD in "${DEPENDENCIES[@]}"
+do
 
-clear
+    if ! require_command "$CMD"; then
+
+        error "$CMD is missing."
+
+        echo
+        echo "Install using:"
+        echo
+
+        echo "sudo apt install $CMD"
+
+        exit 1
+
+    fi
+
+done
+
+
+
+# =====================================================
+# Application Menu
+# =====================================================
+
 
 main_menu
 
 
 
 echo
+
+
+# =====================================================
+# Website Input
+# =====================================================
+
 
 read -rp "Website URL: " URL
 
@@ -79,12 +148,15 @@ fi
 
 
 
+# =====================================================
+# Project Setup
+# =====================================================
+
+
 DEFAULT_NAME=$(clean_name "$URL")
 
 
-read -rp \
-"Project name [$DEFAULT_NAME]: " PROJECT
-
+read -rp "Project name [$DEFAULT_NAME]: " PROJECT
 
 
 PROJECT=${PROJECT:-$DEFAULT_NAME}
@@ -96,7 +168,7 @@ TARGET="$DOWNLOAD_DIR/$PROJECT"
 
 if [[ -d "$TARGET" ]]; then
 
-    warning "Folder already exists:"
+    warning "Destination already exists:"
     echo "$TARGET"
 
     read -rp "Continue and merge files? (y/N): " ANSWER
@@ -110,16 +182,23 @@ fi
 
 
 
+# =====================================================
+# Confirmation
+# =====================================================
+
+
 echo
 
-info "URL:"
+info "Website:"
 echo "$URL"
+
 
 info "Destination:"
 echo "$TARGET"
 
 
-read -rp "Start download? (Y/n): " START
+
+read -rp "Start mirror process? (Y/n): " START
 
 
 START=${START:-Y}
@@ -132,6 +211,11 @@ fi
 
 
 
+# =====================================================
+# Start Process
+# =====================================================
+
+
 START_TIME=$(date +%s)
 
 
@@ -140,11 +224,16 @@ if [[ "$ENABLE_LOG" == true ]]; then
 
     init_log
 
-    log "Starting download"
-    log "URL: $URL"
+    log "ATANNEX mirror started"
+    log "Website: $URL"
 
 fi
 
+
+
+# =====================================================
+# Download Engine
+# =====================================================
 
 
 TYPE=$(detect_type "$URL")
@@ -153,17 +242,24 @@ TYPE=$(detect_type "$URL")
 
 case "$MODE" in
 
+    site)
 
-site)
-
-    download_site "$URL" "$TARGET"
+        download_site "$URL" "$TARGET"
 
     ;;
 
 
-page)
+    page)
 
-    download_page "$URL" "$TARGET"
+        download_page "$URL" "$TARGET"
+
+    ;;
+
+
+    *)
+
+        error "Unknown mode: $MODE"
+        exit 1
 
     ;;
 
@@ -171,9 +267,14 @@ esac
 
 
 
+# =====================================================
+# Completion
+# =====================================================
+
+
 if [[ "$ENABLE_LOG" == true ]]; then
 
-    log "Download completed"
+    log "Mirror completed successfully"
 
 fi
 
